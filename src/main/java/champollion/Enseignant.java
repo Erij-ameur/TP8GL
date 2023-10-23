@@ -1,32 +1,39 @@
 package champollion;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
 
 public class Enseignant extends Personne {
 
-    // TODO : rajouter les autres méthodes présentes dans le diagramme UML
-    private Map<UE, Integer[]> enseignements;
+    private ArrayList<ServicePrevu> servicep ;
+    private ArrayList<Intervention> listInter;
 
+    ServicePrevu service;
+
+    // TODO : rajouter les autres méthodes présentes dans le diagramme UML
     public Enseignant(String nom, String email) {
         super(nom, email);
-        this.enseignements = new HashMap<>();
+        this.listInter = new ArrayList<Intervention>();
+        this.servicep = new ArrayList<ServicePrevu>();
     }
 
     /**
-     * Calcule le nombre total d'heures prévues pour cet enseignant en "heures équivalent TD" Pour le calcul : 1 heure
-     * de cours magistral vaut 1,5 h "équivalent TD" 1 heure de TD vaut 1h "équivalent TD" 1 heure de TP vaut 0,75h
-     * "équivalent TD"
+     * Calcule le nombre total d'heures prévues pour cet enseignant en "heures
+     * équivalent TD" Pour le calcul : 1 heure de cours magistral vaut 1,5 h
+     * "équivalent TD" 1 heure de TD vaut 1h "équivalent TD" 1 heure de TP vaut
+     * 0,75h "équivalent TD"
      *
-     * @return le nombre total d'heures "équivalent TD" prévues pour cet enseignant, arrondi à l'entier le plus proche
+     * @return le nombre total d'heures "équivalent TD" prévues pour cet
+     * enseignant, arrondi à l'entier le plus proche
      *
-     */
-    public int heuresPrevues() {
-        int totalHours = 0;
-        for (Integer[] e : enseignements.values()) {
-            totalHours += e[0] * 1.5 + e[1] + e[2] * 0.75;
+      */
+      public int heuresPrevues() {
+        int equivalentTD = 0;
+        for (ServicePrevu service : servicep) {
+            equivalentTD += (int) service.getVolumeCM() * 1.5;
+            equivalentTD += (int) service.getVolumeTD();
+            equivalentTD += (int) service.getVolumeTP() * 0.75;
         }
-        return Math.round(totalHours);
+        return equivalentTD;
     }
 
     /**
@@ -38,12 +45,28 @@ public class Enseignant extends Personne {
      * @return le nombre total d'heures "équivalent TD" prévues pour cet enseignant, arrondi à l'entier le plus proche
      *
      */
-    public long heuresPrevuesPourUE(UE ue) {
-        if (enseignements.containsKey(ue)) {
-            Integer[] e = enseignements.get(ue);
-            return Math.round(e[0] * 1.5 + e[1] + e[2] * 0.75);
+    public int heuresPrevuesPourUE(UE ue) {
+        int equivalentTD = 0;
+        for (ServicePrevu service : servicep) {
+            if (service.getUe() == ue) {
+                equivalentTD += (int) service.getVolumeCM() * 1.5;
+                equivalentTD += (int) service.getVolumeTD();
+                equivalentTD += (int) service.getVolumeTP() * 0.75;
+            }
         }
-        return 0;
+        return equivalentTD;
+    }
+    public boolean enSousService() {
+        return heuresPrevues() < 192;
+    }
+
+
+    public int resteAPlanifier(UE ue, TypeIntervention type) {
+        if (192 - heuresPrevues() > 0) {
+            return 192 - heuresPrevues();
+        } else {
+            return 0;
+        }
     }
 
     /**
@@ -55,15 +78,18 @@ public class Enseignant extends Personne {
      * @param volumeTP le volume d'heures de TP
      */
     public void ajouteEnseignement(UE ue, int volumeCM, int volumeTD, int volumeTP) {
-        if (enseignements.containsKey(ue)) {
-            Integer[] e = enseignements.get(ue);
-            e[0] += volumeCM;
-            e[1] += volumeTD;
-            e[2] += volumeTP;
+        if(service == null){
+            service = new ServicePrevu(volumeCM, volumeTD, volumeTP, ue);
+            servicep.add(service);
         } else {
-            Integer[] e = {volumeCM, volumeTD, volumeTP};
-            enseignements.put(ue, e);
+            service.setVolumeCM(service.getVolumeCM()+ volumeCM);
+            service.setVolumeTD(service.getVolumeTD()+ volumeTD);
+            service.setVolumeTP(service.getVolumeTP()+ volumeTP);
         }
+    }
+
+    public void ajouterIntervention(Intervention inter) {
+        listInter.add(inter);
     }
 
 }
